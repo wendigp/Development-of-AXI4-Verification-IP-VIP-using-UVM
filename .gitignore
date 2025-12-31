@@ -1,0 +1,17 @@
+# Editor backup files
+*.bak
+
+# Simulator files
+work/
+*.log
+*.wlf
+*.vcd
+*.fsdb
+*.ucdb
+*.cov
+
+# Editor/IDE
+.vscode/
+
+# OS files
+.DS_Store
