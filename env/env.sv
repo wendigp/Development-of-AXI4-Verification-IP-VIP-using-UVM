@@ -27,6 +27,9 @@ function void env::build_phase(uvm_phase phase);
     if(!uvm_config_db #(env_config)::get(this,"","env_config",env_cfg))
         `uvm_fatal("ENVIRONMENT", "CANNOT GET DATA FROM ENV_CONFIG. HAVE YOU SET IT?")
 
+    `uvm_info("ENV", $sformatf("ENV built with %0d masters and %0d slaves",env_cfg.no_of_masters, env_cfg.no_of_slaves),UVM_LOW)
+
+
     //OBJECT CREATION FOR AGENT_TOPS(MASTER_AGENT_TOP, SLAVE_AGENT_TOP)
     m_uvc = master_uvc::type_id::create("m_uvc",this);
     s_uvc = slave_uvc::type_id::create("s_uvc",this);
