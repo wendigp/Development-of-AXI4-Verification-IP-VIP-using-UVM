@@ -1,4 +1,3 @@
-# Development-of-AXI4-Verification-IP-VIP-using-UVM
 
 ## Overview
 This project presents a reusable and configurable AXI4 Verification IP (VIP) developed using SystemVerilog and UVM. The VIP is designed to verify AXI4-compliant designs by generating protocol-accurate stimulus, monitoring DUT responses, and validating data integrity, ordering, and protocol compliance.
@@ -20,13 +19,14 @@ The verification environment supports independent read and write channel operati
 ---
 
 ## Verification Architecture
-The VIP follows a standard layered UVM architecture, enabling scalability and reuse:
+The VIP follows a standard layered UVM architecture with **separate UVCs for Master and Slave**, enabling scalability and reuse:
 
 - AXI Interface
+- Master Agent UVC
+- Slave Agent UVC
 - Sequencer
 - Driver
 - Monitor
-- Agent (configurable as Master or Slave)
 - Scoreboard
 - Environment
 - Test
@@ -69,16 +69,24 @@ The verification environment validates:
 ```text
 Development-of-AXI4-Verification-IP-VIP-using-UVM/
 ├── agent/
-│   ├── axi_driver.sv
-│   ├── axi_monitor.sv
-│   ├── axi_sequencer.sv
-│   └── axi_agent.sv
+│   ├── master_agent/
+│   │   ├── axi_master_driver.sv
+│   │   ├── axi_master_monitor.sv
+│   │   ├── axi_master_sequencer.sv
+│   │   └── axi_master_agent.sv
+│   ├── slave_agent/
+│   │   ├── axi_slave_driver.sv
+│   │   ├── axi_slave_monitor.sv
+│   │   ├── axi_slave_sequencer.sv
+│   │   └── axi_slave_agent.sv
+│   └── axi_agent_pkg.sv
 ├── env/
 │   ├── axi_scoreboard.sv
 │   └── axi_env.sv
 ├── seq/
 │   ├── axi_base_seq.sv
-│   └── axi_rw_seq.sv
+│   ├── axi_read_seq.sv
+│   └── axi_write_seq.sv
 ├── test/
 │   └── axi_base_test.sv
 ├── tb/
