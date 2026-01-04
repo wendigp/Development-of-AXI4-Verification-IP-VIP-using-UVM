@@ -1,3 +1,4 @@
+
 //==============================================//
 //MASTER UVC == MASTER AGENT TOP
 //==============================================//
@@ -29,11 +30,11 @@ function void master_uvc::build_phase(uvm_phase phase);
 
     foreach(m_agent[i])
         begin
-        m_agent[i] = master_agent::type_id::create($sformatf("m_agent[%0d]",i),this);
+            m_agent[i] = master_agent::type_id::create($sformatf("m_agent[%0d]",i),this);
 
-        uvm_config_db#(uvm_active_passive_enum)::set(this, $sformatf("m_agent[%0d]*", i), "is_active", env_cfg.m_cfg[i].is_active);
-        //SETTING DATA TO MASTER CONFIG
-        uvm_config_db #(m_config)::set(this,$sformatf("m_agent[%0d]*",i),"m_config", env_cfg.m_cfg[i]);
+            uvm_config_db#(uvm_active_passive_enum)::set(this, $sformatf("m_agent[%0d]*", i), "is_active", env_cfg.m_cfg[i].is_active);
+            //SETTING DATA TO MASTER CONFIG
+            uvm_config_db #(m_config)::set(this,$sformatf("m_agent[%0d]*",i),"m_config", env_cfg.m_cfg[i]);
         end
 endfunction
 
