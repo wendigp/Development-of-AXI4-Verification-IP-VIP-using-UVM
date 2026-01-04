@@ -15,46 +15,46 @@ interface axi_if #(
 	logic [ID_WIDTH - 1:0]		AWID;
 	logic [ADDR_WIDTH - 1:0]	AWADDR;
 	logic [LEN_WIDTH-1 :0] 		AWLEN;
-	logic [2:0] 			AWSIZE;
-	logic [1:0] 			AWBURST;
-	logic				AWVALID;
-	logic				AWREADY;
+	logic [2:0] 				AWSIZE;
+	logic [1:0] 				AWBURST;
+	logic						AWVALID;
+	logic						AWREADY;
 	
 //==========WRITE DATA CHANNEL ================//
 	logic [DATA_WIDTH-1:0]		WDATA;
 	logic [(DATA_WIDTH/8)-1:0] 	WSTRB;
-	logic 				WLAST;
-	logic				WVALID;
-	logic				WREADY;
+	logic 						WLAST;
+	logic						WVALID;
+	logic						WREADY;
 	
 //==========WRITE RESPONSE CHANNEL ============//
 	logic [ID_WIDTH-1:0]	BID;
-	logic [1:0] 		BRESP;
-	logic			BVALID;
-	logic			BREADY;
+	logic [1:0] 			BRESP;
+	logic					BVALID;
+	logic					BREADY;
 	
 //===========READ ADDRESS CHANNEL ============//
 	logic [ID_WIDTH-1:0]		ARID;
 	logic [ADDR_WIDTH-1:0]		ARADDR;
 	logic [LEN_WIDTH-1:0] 		ARLEN;
-	logic [2:0] 			ARSIZE;
-	logic [1:0] 			ARBURST;
-	logic				ARVALID;
-	logic				ARREADY;
+	logic [2:0] 				ARSIZE;
+	logic [1:0] 				ARBURST;
+	logic						ARVALID;
+	logic						ARREADY;
 	
 //==========READ DATA CHANNEL ================//
 	logic [ID_WIDTH-1:0]		RID;
 	logic [DATA_WIDTH-1:0]		RDATA;
-	logic [1:0] 			RRESP;
-	logic 				RLAST;
-	logic				RVALID;
-	logic				RREADY;		
+	logic [1:0] 				RRESP;
+	logic 						RLAST;
+	logic						RVALID;
+	logic						RREADY;		
 
 //=============== MASTER DRIVER CLOCKING BLOCK ========//
 clocking drv_cb_m @(posedge ACLK);
 	default input #1 output #0;
 	
-	input ARESETn;
+	output ARESETn;
 	
 	//WRITE ADDRESS CHANNEL
 	input 	AWREADY;
@@ -72,7 +72,7 @@ clocking drv_cb_m @(posedge ACLK);
 	input 	ARREADY;
 	output 	ARADDR, ARBURST, ARID, ARLEN, ARSIZE, ARVALID;
 	
-	//WRITE DATA CHANNEL
+	//READ DATA CHANNEL
 	input	RDATA, RID, RRESP, RLAST, RVALID;
 	output	RREADY;
 endclocking
@@ -99,7 +99,7 @@ clocking mon_cb_m @(posedge ACLK);
 	input 	ARREADY;
 	input 	ARADDR, ARBURST, ARID, ARLEN, ARSIZE, ARVALID;
 	
-	//WRITE DATA CHANNEL
+	//READ DATA CHANNEL
 	input	RDATA, RID, RRESP, RLAST, RVALID;
 	input	RREADY;
 endclocking
@@ -126,7 +126,7 @@ clocking drv_cb_s @(posedge ACLK);
 	output 	ARREADY;
 	input 	ARADDR, ARBURST, ARID, ARLEN, ARSIZE, ARVALID;
 	
-	//WRITE DATA CHANNEL
+	//READ DATA CHANNEL
 	output	RDATA, RID, RRESP, RLAST, RVALID;
 	input	RREADY;
 endclocking
@@ -153,7 +153,7 @@ clocking mon_cb_s @(posedge ACLK);
 	input 	ARREADY;
 	input 	ARADDR, ARBURST, ARID, ARLEN, ARSIZE, ARVALID;
 	
-	//WRITE DATA CHANNEL
+	//READ DATA CHANNEL
 	input	RDATA, RID, RRESP, RLAST, RVALID;
 	input	RREADY;
 endclocking
