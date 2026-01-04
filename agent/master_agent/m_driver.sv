@@ -248,3 +248,32 @@ task m_driver::read_data(axi_txn xtn);
     end
         `uvm_info(get_type_name(),"END OF READ DATA",UVM_HIGH);
 endtask
+
+
+/*
+Master delay improves realism, exposes corner cases,
+ validates AXI backpressure handling, and strengthens coverage and confidence in the design.
+
+ Here are the primary advantages:
+
+1. Verifies Handshake Robustness: By delaying VALID (or READY for read channels), 
+you force the Slave to maintain its state and signal stability 
+(e.g., ensuring READY doesn't toggle illegally while waiting for VALID).
+
+2. Stresses Backpressure Logic: It simulates a "busy" master. 
+This verifies if the Slave can handle gaps in data bursts 
+without losing information or corrupting the internal address increment logic.
+
+3. Exposes Synchronization Issues: Random delays help identify bugs where the Slave might incorrectly
+ assume that data beats will always arrive on consecutive clock cycles.
+
+4. Tests FIFO Thresholds: Inserting delays allows the Slave's internal buffers to fill or empty at different rates,
+ stressing "Almost Full" or "Almost Empty" conditions that wouldn't be reached in a zero-delay simulation.
+
+5. Increases Functional Coverage: It explores a wider range of timing scenarios within the AXI4 specification, 
+ensuring the design is verified across its full timing envelope rather than just the "best-case" scenario.
+
+6. Validates Protocol Transitions: It ensures that signals like WLAST or RLAST are sampled correctly only when the handshake occurs,
+ even if there is a long stall before the final beat.
+
+*/
