@@ -1,7 +1,5 @@
 # Development-of-AXI4-Verification-IP-VIP-using-UVM
 
-# Development-of-AXI4-Verification-IP-VIP-using-UVM
-
 ## Overview
 This project presents a reusable and configurable AXI4 Verification IP (VIP) developed using SystemVerilog and UVM. The VIP is designed to verify AXI4-compliant designs by generating protocol-accurate stimulus, monitoring DUT responses, and validating data integrity, ordering, and protocol compliance.
 
@@ -17,6 +15,7 @@ The verification environment supports independent read and write channel operati
 - SystemVerilog Assertions (SVA) for AXI timing and protocol compliance checks
 - Constrained-random stimulus for burst lengths, data widths, addresses, and transaction IDs
 - Functional coverage to measure verification completeness across AXI scenarios
+- Automated regression execution using Python scripts and Makefile-driven simulation flow
 
 ---
 
@@ -49,10 +48,12 @@ The verification environment validates:
 ---
 
 ## Tools and Technologies
-- Language: SystemVerilog
-- Methodology: UVM
-- Assertions: SystemVerilog Assertions (SVA)
-- Simulators: QuestaSim, Synopsys VCS
+- Language: SystemVerilog  
+- Methodology: UVM  
+- Assertions: SystemVerilog Assertions (SVA)  
+- Simulators: QuestaSim, Synopsys VCS  
+- Scripting: Python (regression automation and log parsing)  
+- Build & Run Flow: Makefile-based simulation control  
 
 ---
 
@@ -60,6 +61,7 @@ The verification environment validates:
 - Achieved over 90% functional coverage using constrained-random stimulus
 - Detected AXI protocol violations through assertion-based verification
 - Verified correct behavior across multiple AXI transaction scenarios, including corner cases
+- Successful multi-test regression runs using automated Python and Makefile flow
 
 ---
 
@@ -81,4 +83,7 @@ Development-of-AXI4-Verification-IP-VIP-using-UVM/
 │   └── axi_base_test.sv
 ├── tb/
 │   └── axi_tb_top.sv
+├── scripts/
+│   └── regression.py
+├── Makefile
 └── README.md
