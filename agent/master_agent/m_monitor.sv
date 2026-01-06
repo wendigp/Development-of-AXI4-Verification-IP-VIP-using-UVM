@@ -86,10 +86,10 @@ task m_monitor::collect_write_data();
 
             // Protocol Checks for Write Last
             if(i != xtn.AWLEN && vif.mon_cb_m.WLAST)
-                `uvm_error("MONITOR_WRITE", "WLAST asserted prematurely")
+                `uvm_error("MASTER MONITOR_WRITE", "WLAST asserted prematurely")
 
             if(i == xtn.AWLEN && !vif.mon_cb_m.WLAST)
-                `uvm_error("MONITOR_WRITE", "WLAST missing on last beat")
+                `uvm_error("MASTER MONITOR_WRITE", "WLAST missing on last beat")
         end
 
         // CAPTURING RESPONSE CHANNEL
@@ -101,7 +101,7 @@ task m_monitor::collect_write_data();
         xtn.BRESP = vif.mon_cb_m.BRESP;
 
         // SEND COMPLETED TRANSACTIONS TO ANALYSIS PORT
-        `uvm_info("MONITOR WRITE", "COLLECTED WRITE TRANSACTION", UVM_LOW)
+        `uvm_info("MASTER MONITOR WRITE", "COLLECTED WRITE TRANSACTION", UVM_LOW)
         analysis_port.write(xtn);
     end
 endtask
@@ -138,14 +138,14 @@ task m_monitor::collect_read_data();
 
             // Protocol Checks for Read Last
             if(i != xtn.ARLEN && vif.mon_cb_m.RLAST)
-                `uvm_error("MONITOR_READ", "RLAST asserted prematurely")
+                `uvm_error("MASTER MONITOR_READ", "RLAST asserted prematurely")
                 
             if(i == xtn.ARLEN && !vif.mon_cb_m.RLAST)
-                `uvm_error("MONITOR_READ", "RLAST missing on last beat")
+                `uvm_error("MASTER MONITOR_READ", "RLAST missing on last beat")
         end
         
         // SEND COMPLETED READ TRANSACTIONS TO ANALYSIS PORT
-        `uvm_info("MONITOR READ", "COLLECTED READ TRANSACTION", UVM_LOW)
+        `uvm_info("MASTER MONITOR READ", "COLLECTED READ TRANSACTION", UVM_LOW)
         analysis_port.write(xtn);
     end
 endtask
