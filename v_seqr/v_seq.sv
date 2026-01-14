@@ -13,16 +13,16 @@ class v_base_seq extends uvm_sequence;
     `uvm_declare_p_sequencer(v_sequencer)
 
     // Handles for physical sequencers (routed from virtual sequencer)
-    master_sequencer    m_seqr;
-    slave_sequencer     s_seqr;
+    master_seqr         m_seqr;
+    slave_seqr          s_seqr;
     env_config          env_cfg;
 
     // Handles for all available Master sub-sequences
-    incr_burst_seq      incr_s;
-    raw_hazard_seq      raw_s;
-    narrow_transfer_seq narrow_s;
-    fixed_burst_seq     fixed_s;
-    wrap_burst_seq      wrap_s;
+    incr_burst_seq          incr_s;
+    raw_hazard_seq          raw_s;
+    narrow_transfer_seq     narrow_s;
+    fixed_burst_seq         fixed_s;
+    wrap_burst_seq          wrap_s;
 
     extern function new(string name = "v_base_seq");
     extern virtual task body();

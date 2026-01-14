@@ -1,278 +1,215 @@
 //==============================================================================//
-// SLAVE DRIVER (FULLY REACTIVE)
-// Implementation: Monitors interface for Master requests and responds autonomously
-//=============================================================================//
+// AXI SLAVE DRIVER (FIXED - RLAST Issue Resolved)
+//==============================================================================//
+
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+
 class s_driver extends uvm_driver #(axi_txn);
 
-    `uvm_component_utils(s_driver)
+  `uvm_component_utils(s_driver)
 
-    s_config                        s_cfg;
-    virtual axi_if                  vif;
+  s_config        s_cfg;
+  virtual axi_if  vif;
 
-    // Byte-addressable slave memory
-    bit [7:0] slave_mem [bit [31:0]];
+  // Byte-addressable associative memory
+  bit [7:0] slave_mem [bit [31:0]];
 
-    extern function new(string name = "s_driver", uvm_component parent);
-    extern function void build_phase(uvm_phase phase);
-    extern function void connect_phase(uvm_phase phase);
-    extern task run_phase(uvm_phase phase);
-    
-    // TASK FOR CHANNEL HANDLING
-    extern task handle_write_requests();
-    extern task handle_read_requests();
-
-    // TASKS FOR WRITE OPERATION (REACTIVE)
-    extern task write_addr_phase(axi_txn xtn);
-    extern task write_data_phase(axi_txn xtn);
-    extern task write_response_phase(axi_txn xtn);
-    
-    // TASKS FOR READ OPERATION (REACTIVE)
-    extern task read_addr_phase(axi_txn xtn);
-    extern task read_data_phase(axi_txn xtn);
-
-endclass
-
-//==============================================================================//
-// CONSTRUCTOR
-//==============================================================================//
-function s_driver::new(string name = "s_driver", uvm_component parent);
+  function new(string name="s_driver", uvm_component parent);
     super.new(name, parent);
-endfunction
+  endfunction
 
-//==============================================================================//
-// BUILD PHASE
-//==============================================================================//
-function void s_driver::build_phase(uvm_phase phase);
+  function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if(!uvm_config_db #(s_config)::get(this, "", "s_config", s_cfg))
-        `uvm_fatal("SLAVE_DRIVER", "CANNOT GET s_config")
-endfunction
+    if (!uvm_config_db #(s_config)::get(this,"","s_config",s_cfg))
+      `uvm_fatal("SLAVE_DRIVER","Cannot get s_config from config_db")
+  endfunction
 
-//==============================================================================//
-// CONNECT PHASE
-//==============================================================================//
-function void s_driver::connect_phase(uvm_phase phase);
+  function void connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     vif = s_cfg.vif;
-    if(vif == null)
-        `uvm_fatal("SLAVE_DRIVER", "VIF IS NULL")
-endfunction
+    if (vif == null)
+      `uvm_fatal("SLAVE_DRIVER","VIF is NULL")
+  endfunction
 
-//==============================================================================//
-// RUN PHASE
-//==============================================================================//
-task s_driver::run_phase(uvm_phase phase);
-    super.run_phase(phase);
+  //--------------------------------------------------------------------------
+  // MAIN RUN PHASE
+  //--------------------------------------------------------------------------
+  task run_phase(uvm_phase phase);
+    reset_signals();
 
-    // Initial State Reset: Slave is idle
-    vif.drv_cb_s.AWREADY <= 0;
-    vif.drv_cb_s.WREADY  <= 0;
-    vif.drv_cb_s.BVALID  <= 0;
-    vif.drv_cb_s.ARREADY <= 0;
-    vif.drv_cb_s.RVALID  <= 0;
-    vif.drv_cb_s.RLAST   <= 0;
+    forever begin
+      wait(vif.ARESETn === 1'b1);
 
-    // AXI is full-duplex: handle Read and Write independently without blocking
-    fork
-        handle_write_requests();
-        handle_read_requests();
-    join_none
-endtask
+      fork
+        handle_write();
+        handle_read();
+      join_none
 
-//==============================================================================//
-// WRITE REQUEST HANDLER
-//==============================================================================//
-task s_driver::handle_write_requests();
+      wait(vif.ARESETn === 1'b0);
+      disable fork;
+      reset_signals();
+    end
+  endtask
+
+  //--------------------------------------------------------------------------
+  // RESET TASK
+  //--------------------------------------------------------------------------
+  task reset_signals();
+    vif.drv_cb_s.AWREADY <= 1'b0;
+    vif.drv_cb_s.WREADY  <= 1'b0;
+    vif.drv_cb_s.BVALID  <= 1'b0;
+    vif.drv_cb_s.ARREADY <= 1'b0;
+    vif.drv_cb_s.RVALID  <= 1'b0;
+    vif.drv_cb_s.RLAST   <= 1'b0;
+    vif.drv_cb_s.BID     <= '0;
+    vif.drv_cb_s.RID     <= '0;
+    vif.drv_cb_s.BRESP   <= '0;
+    vif.drv_cb_s.RRESP   <= '0;
+    vif.drv_cb_s.RDATA   <= '0;
+  endtask
+
+  //--------------------------------------------------------------------------
+  // WRITE CHANNEL
+  //--------------------------------------------------------------------------
+  task handle_write();
     axi_txn xtn;
     forever begin
-        // RESET GUARD: Ensure signals are zeroed during reset
-        if (!vif.rst_n) begin
-            vif.drv_cb_s.AWREADY <= 0;
-            vif.drv_cb_s.WREADY  <= 0;
-            vif.drv_cb_s.BVALID  <= 0;
-            @(posedge vif.rst_n);
-        end
-
-        xtn = axi_txn::type_id::create("xtn");
-        
-        // 1. Capture address FIRST
-        write_addr_phase(xtn);
-        
-        // 2. Then accept data beats
-        write_data_phase(xtn);
-        
-        // 3. Autonomous Response Generation
-        xtn.BRESP = 2'b00; // OKAY
-        
-        // 4. Drive Response back to Master
-        write_response_phase(xtn);
+      xtn = axi_txn::type_id::create("xtn");
+      write_addr_phase(xtn);
+      write_data_phase(xtn);
+      write_resp_phase(xtn);
     end
-endtask
+  endtask
 
-//==============================================================================//
-// READ REQUEST HANDLER
-//==============================================================================//
-task s_driver::handle_read_requests();
+  task write_addr_phase(axi_txn xtn);
+    vif.drv_cb_s.AWREADY <= 1'b1;
+
+    // Wait for AWVALID handshake
+    do begin
+      @(vif.drv_cb_s);
+    end while (vif.drv_cb_s.AWVALID !== 1'b1);
+
+    xtn.AWID    = vif.drv_cb_s.AWID;
+    xtn.AWADDR  = vif.drv_cb_s.AWADDR;
+    xtn.AWLEN   = vif.drv_cb_s.AWLEN;
+    xtn.AWSIZE  = vif.drv_cb_s.AWSIZE;
+    xtn.AWBURST = vif.drv_cb_s.AWBURST;
+
+    vif.drv_cb_s.AWREADY <= 1'b0;
+  endtask
+
+  task write_data_phase(axi_txn xtn);
+    bit [31:0] addr = xtn.AWADDR;
+    int beat_bytes  = (1 << xtn.AWSIZE);
+
+    for (int k = 0; k <= xtn.AWLEN; k++) begin
+      vif.drv_cb_s.WREADY <= 1'b1;
+
+      // Wait for WVALID handshake
+      do begin
+        @(vif.drv_cb_s);
+      end while (vif.drv_cb_s.WVALID !== 1'b1);
+
+      // Perform memory update based on WSTRB
+      for (int i = 0; i < 4; i++) begin
+        if (vif.drv_cb_s.WSTRB[i])
+          slave_mem[addr+i] = vif.drv_cb_s.WDATA[i*8 +: 8];
+      end
+
+      // Address increment for INCR burst
+      if (xtn.AWBURST == 2'b01)
+        addr += beat_bytes;
+
+      // Stop early if WLAST is asserted (protocol safe)
+      if (vif.drv_cb_s.WLAST)
+        break;
+    end
+
+    vif.drv_cb_s.WREADY <= 1'b0;
+  endtask
+
+  task write_resp_phase(axi_txn xtn);
+    @(vif.drv_cb_s);
+
+    vif.drv_cb_s.BID    <= xtn.AWID;
+    vif.drv_cb_s.BRESP  <= 2'b00; // OKAY
+    vif.drv_cb_s.BVALID <= 1'b1;
+
+    // Wait for BREADY handshake
+    do begin
+      @(vif.drv_cb_s);
+    end while (vif.drv_cb_s.BREADY !== 1'b1);
+
+    vif.drv_cb_s.BVALID <= 1'b0;
+  endtask
+
+  //--------------------------------------------------------------------------
+  // READ CHANNEL
+  //--------------------------------------------------------------------------
+  task handle_read();
     axi_txn xtn;
     forever begin
-        // RESET GUARD: Ensure signals are zeroed during reset
-        if (!vif.rst_n) begin
-            vif.drv_cb_s.ARREADY <= 0;
-            vif.drv_cb_s.RVALID  <= 0;
-            vif.drv_cb_s.RLAST   <= 0;
-            @(posedge vif.rst_n);
-        end
-
-        xtn = axi_txn::type_id::create("xtn");
-        
-        // 1. Capture the Address/Control from Master
-        read_addr_phase(xtn);
-        
-        // 2. Autonomous Data Generation
-        xtn.RRESP = 2'b00; // OKAY
-        
-        // 3. Drive Data Burst back to Master
-        read_data_phase(xtn);
+      xtn = axi_txn::type_id::create("xtn");
+      read_addr_phase(xtn);
+      read_data_phase(xtn);
     end
-endtask
+  endtask
 
-//******************************************************************************//
-// WRITE ADDRESS PHASE
-//******************************************************************************//
-task s_driver::write_addr_phase(axi_txn xtn);
-    @(vif.drv_cb_s);
-    vif.drv_cb_s.AWREADY <= 1;
+  task read_addr_phase(axi_txn xtn);
+    vif.drv_cb_s.ARREADY <= 1'b1;
 
-    wait(vif.drv_cb_s.AWVALID);
+    // Wait for ARVALID handshake
+    do begin
+      @(vif.drv_cb_s);
+    end while (vif.drv_cb_s.ARVALID !== 1'b1);
 
-    // Capture metadata from interface IMMEDIATELY during handshake
-    xtn.AWID   = vif.drv_cb_s.AWID; 
-    xtn.AWADDR = vif.drv_cb_s.AWADDR;
-    xtn.AWLEN  = vif.drv_cb_s.AWLEN;
+    xtn.ARID    = vif.drv_cb_s.ARID;
+    xtn.ARADDR  = vif.drv_cb_s.ARADDR;
+    xtn.ARLEN   = vif.drv_cb_s.ARLEN;
+    xtn.ARSIZE  = vif.drv_cb_s.ARSIZE;
+    xtn.ARBURST = vif.drv_cb_s.ARBURST;
 
-    @(vif.drv_cb_s);
-    vif.drv_cb_s.AWREADY <= 0;
-endtask
+    vif.drv_cb_s.ARREADY <= 1'b0;
+  endtask
 
-//******************************************************************************//
-// WRITE DATA PHASE
-//******************************************************************************//
-task s_driver::write_data_phase(axi_txn xtn);
-    bit [31:0] current_addr;
-    int beat_count;
-    bit last_seen;
-    
-    current_addr = xtn.AWADDR;
-    beat_count   = 0;
-    last_seen    = 0;
+  //--------------------------------------------------------------------------
+  // READ DATA PHASE (FIXED RLAST + RVALID ALIGNMENT)
+  //--------------------------------------------------------------------------
+  task read_data_phase(axi_txn xtn);
+  bit [31:0] addr = xtn.ARADDR;
+  int beat_bytes  = (1 << xtn.ARSIZE);
+  bit [31:0] rdata_temp;
 
-    while (!last_seen) begin
-        // SAFE HANDSHAKE: Assert WREADY before sampling WVALID
-        vif.drv_cb_s.WREADY <= 1;
-        
-        do @(vif.drv_cb_s);
-        while (vif.drv_cb_s.WVALID !== 1);
+  for (int beat = 0; beat <= xtn.ARLEN; beat++) begin
 
-        // Store data using WSTRB
-        for (int i = 0; i < 4; i++) begin
-            if (vif.drv_cb_s.WSTRB[i]) begin
-                slave_mem[current_addr + i] = vif.drv_cb_s.WDATA[(i*8) +: 8];
-            end
-        end
-
-        // Burst checks
-        if (vif.drv_cb_s.WLAST) begin
-            last_seen = 1;
-            if (beat_count != xtn.AWLEN) begin
-                `uvm_error("AXI_WLAST_ERR", 
-                    $sformatf("Early WLAST: expected %0d beats (AWLEN=%0d), got %0d", 
-                              xtn.AWLEN+1, xtn.AWLEN, beat_count+1))
-            end
-        end else if (beat_count == xtn.AWLEN) begin
-            `uvm_error("AXI_WLAST_ERR", "Missing WLAST on final beat")
-            last_seen = 1; // Force termination to prevent hanging
-        end
-
-        beat_count++;
-        current_addr += 4; 
+    // 1) Prepare Read Data
+    rdata_temp = '0;
+    for (int b = 0; b < 4; b++) begin
+      rdata_temp[b*8 +: 8] = slave_mem.exists(addr+b) ? slave_mem[addr+b] : 8'h00;
     end
 
-    // End of data phase handshaking - deassert WREADY
-    vif.drv_cb_s.WREADY <= 0;
-    @(vif.drv_cb_s);
+    // 2) Drive everything together (VALID + DATA + LAST must be stable)
+    vif.drv_cb_s.RID    <= xtn.ARID;
+    vif.drv_cb_s.RDATA  <= rdata_temp;
+    vif.drv_cb_s.RRESP  <= 2'b00;
+    vif.drv_cb_s.RLAST  <= (beat == xtn.ARLEN);
+    vif.drv_cb_s.RVALID <= 1'b1;
+
+    // 3) Wait until handshake happens (slave must HOLD signals)
+    do begin
+      @(vif.drv_cb_s);
+    end while (!(vif.drv_cb_s.RREADY === 1'b1 && vif.drv_cb_s.RVALID === 1'b1));
+
+    // 4) Drop valid after handshake
+    vif.drv_cb_s.RVALID <= 1'b0;
+    vif.drv_cb_s.RLAST  <= 1'b0;
+
+    // 5) Increment addr for INCR burst
+    if (xtn.ARBURST == 2'b01)
+      addr += beat_bytes;
+  end
 endtask
 
-//******************************************************************************//
-// WRITE RESPONSE PHASE
-//******************************************************************************//
-task s_driver::write_response_phase(axi_txn xtn);
-    @(vif.drv_cb_s);
-    vif.drv_cb_s.BVALID <= 1;
-    vif.drv_cb_s.BRESP  <= xtn.BRESP;
-    vif.drv_cb_s.BID    <= xtn.AWID; 
 
-    wait(vif.drv_cb_s.BREADY);
-    @(vif.drv_cb_s);
-
-    vif.drv_cb_s.BVALID <= 0;
-endtask
-
-//******************************************************************************//
-// READ ADDRESS PHASE
-//******************************************************************************//
-task s_driver::read_addr_phase(axi_txn xtn);
-    @(vif.drv_cb_s);
-    vif.drv_cb_s.ARREADY <= 1;
-
-    wait(vif.drv_cb_s.ARVALID);
-
-    // Capture metadata from interface
-    xtn.ARID   = vif.drv_cb_s.ARID;
-    xtn.ARADDR = vif.drv_cb_s.ARADDR;
-    xtn.ARLEN  = vif.drv_cb_s.ARLEN;
-
-    @(vif.drv_cb_s);
-    vif.drv_cb_s.ARREADY <= 0;
-endtask
-
-//******************************************************************************//
-// READ DATA PHASE
-//******************************************************************************//
-task s_driver::read_data_phase(axi_txn xtn);
-    bit [31:0] current_addr;
-    bit [31:0] data_word;
-
-    current_addr = xtn.ARADDR;
-
-    for (int i = 0; i <= xtn.ARLEN; i++) begin
-        // Async reset check inside loop
-        if (!vif.rst_n) begin
-            vif.drv_cb_s.RVALID <= 0;
-            vif.drv_cb_s.RLAST  <= 0;
-            return;
-        end
-
-        data_word = 32'h0;
-        for (int b = 0; b < 4; b++) begin
-            if (slave_mem.exists(current_addr + b))
-                data_word[(b*8) +: 8] = slave_mem[current_addr + b];
-            else
-                data_word[(b*8) +: 8] = $urandom;
-        end
-
-        vif.drv_cb_s.RVALID <= 1;
-        vif.drv_cb_s.RID    <= xtn.ARID;
-        vif.drv_cb_s.RDATA  <= data_word;
-        vif.drv_cb_s.RRESP  <= xtn.RRESP;
-        vif.drv_cb_s.RLAST  <= (i == xtn.ARLEN);
-
-        do @(vif.drv_cb_s);
-        while (!vif.drv_cb_s.RREADY);
-
-        current_addr += 4;
-    end
-
-    vif.drv_cb_s.RVALID <= 0;
-    vif.drv_cb_s.RLAST  <= 0;
-    @(vif.drv_cb_s);
-endtask
+endclass

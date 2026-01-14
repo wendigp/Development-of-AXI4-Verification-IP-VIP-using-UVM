@@ -1,60 +1,52 @@
+`timescale 1ns/1ps
+
 //==============================================================================//
 // TOP LEVEL TESTBENCH - VIP DEVELOPMENT MODE
-// Implementation: 
-//   - Pure UVM environment (No RTL/DUT)
-//   - Focus: VIP Handshake, Protocol, and Coverage validation
 //==============================================================================//
 
 `include "uvm_macros.svh"
 import uvm_pkg::*;
+import axi_pkg::*;
 
 module top;
 
     //-------------------------------------------------------------------------
-    // 1. Clock and Reset Signals
+    // 1. Clock and Reset
     //-------------------------------------------------------------------------
     bit clock;
-    bit reset_n;
+   // bit rst_n;
 
     initial begin
         clock = 0;
         forever #5ns clock = ~clock;
     end
 
+ 
+
+    //-------------------------------------------------------------------------
+    // 2. AXI Interface
+    //-------------------------------------------------------------------------
+    axi_if pif (clock);
+
     initial begin
-        reset_n = 0;
+        pif.ARESETn = 0;
         #25ns;
-        reset_n = 1;
+        pif.ARESETn = 1;
     end
 
     //-------------------------------------------------------------------------
-    // 2. Interface Instantiation
-    // This interface acts as the "Bus" where the VIP components meet.
-    //-------------------------------------------------------------------------
-    axi_if pif (clock, reset_n);
-
-    //-------------------------------------------------------------------------
-    // 3. DUT Instantiation (REMOVED)
-    // For VIP Development, the Master and Slave Agents act as each other's DUT.
-    //-------------------------------------------------------------------------
-
-    //-------------------------------------------------------------------------
-    // 4. Test Entry Point & Config DB Setup
+    // 3. UVM Configuration + Test Start
     //-------------------------------------------------------------------------
     initial begin
-        // Pass the physical interface to the UVM database
         uvm_config_db #(virtual axi_if)::set(null, "*", "vif", pif);
-        
-        // Start the UVM test (e.g., +UVM_TESTNAME=incr_burst_test)
-        run_test();
+        run_test();   // or run_test("base_test");
     end
 
     //-------------------------------------------------------------------------
-    // 5. Simulation Control
+    // 4. Waveform Dump (Questa-friendly)
     //-------------------------------------------------------------------------
     initial begin
-        $dumpfile("dump.vcd");
-        $dumpvars(0, top);
+        $wlfdumpvars(0, top);
     end
 
 endmodule

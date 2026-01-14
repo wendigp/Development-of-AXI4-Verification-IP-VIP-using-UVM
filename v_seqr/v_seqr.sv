@@ -2,25 +2,25 @@
 //VIRTUAL SEQUENCER
 //=================================================================//
 
-class v_seqr extends uvm_sequencer #(uvm_sequence_item);
+class v_sequencer extends uvm_sequencer #(uvm_sequence_item);
 
-    `uvm_component_utils(v_seqr)
+    `uvm_component_utils(v_sequencer)
 
     env_config  env_cfg;
-    m_seqr      m_seqrh[];
-    s_seqr      s_seqrh[];
+    master_seqr      m_seqrh[];
+    slave_seqr       s_seqrh[];
 
-    extern function new(string name = "v_seqr", uvm_component parent);
+    extern function new(string name = "v_sequencer", uvm_component parent);
     extern function void build_phase(uvm_phase phase);
 endclass
 
 //CONSTRUCTOR
-function v_seqr::new(string name = "v_seqr", uvm_component parent);
+function v_sequencer::new(string name = "v_sequencer", uvm_component parent);
     super.new(name,parent);
-endclass
+endfunction
 
 //BUILD PHASE
-function void v_seqr::build_phase(uvm_phase phase);
+function void v_sequencer::build_phase(uvm_phase phase);
     super.build_phase(phase);
     
     if(!uvm_config_db #(env_config)::get(this,"","env_config",env_cfg))

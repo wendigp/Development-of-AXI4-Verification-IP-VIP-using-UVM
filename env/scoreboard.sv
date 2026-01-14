@@ -52,7 +52,7 @@ task scoreboard::run_phase(uvm_phase phase);
     super.run_phase(phase);
 
     forever begin
-        wait(vif.aresetn === 1);
+        wait(vif.ARESETn === 1);
 
         fork
             // Process A: Monitor Master (Writer/Initiator Side)
@@ -71,7 +71,7 @@ task scoreboard::run_phase(uvm_phase phase);
 
             // Process C: Reset Monitor (Synchronous structured exit)
             begin
-                wait(vif.aresetn === 0);
+                wait(vif.ARESETn === 0);
                 `uvm_info("SCOREBOARD", "RESET DETECTED: Clearing Golden Memory", UVM_LOW)
             end
         join_any

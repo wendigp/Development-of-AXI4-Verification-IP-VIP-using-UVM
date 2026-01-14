@@ -92,20 +92,19 @@ class incr_burst_test extends base_test;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
-        v_incr_burst_test_seq vseq;
-        
-        phase.raise_objection(this);
-        `uvm_info("TEST_START", get_type_name(), UVM_NONE)
-        
-        // Advanced Drain Time: Set via uvm_test_done (objection mechanism)
-        uvm_test_done.set_drain_time(this, 100ns);
-        
-        vseq = v_incr_burst_test_seq::type_id::create("vseq");
-        
-        // Start virtual sequence on the virtual sequencer inside the env
-        vseq.start(env_h.v_seqr);
-        
-        phase.drop_objection(this);
+    v_incr_burst_test_seq vseq;
+    
+    phase.raise_objection(this);
+    `uvm_info("TEST_START", "Objection raised", UVM_NONE)
+    
+    vseq = v_incr_burst_test_seq::type_id::create("vseq");
+    `uvm_info("TEST_START", "Virtual sequence created", UVM_NONE)
+    
+    vseq.start(env_h.v_seqr);
+    `uvm_info("TEST_START", "Virtual sequence completed", UVM_NONE)
+    
+    phase.drop_objection(this);
+    `uvm_info("TEST_START", "Objection dropped", UVM_NONE)
     endtask
 endclass
 

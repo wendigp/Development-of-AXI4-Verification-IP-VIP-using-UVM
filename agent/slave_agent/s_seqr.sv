@@ -5,9 +5,9 @@
 //   - Facilitates communication between Slave Sequences and Slave Driver
 //==============================================================================//
 
-class s_sequencer extends uvm_sequencer #(axi_txn);
+class slave_seqr extends uvm_sequencer #(axi_txn);
 
-    `uvm_component_utils(s_sequencer)
+    `uvm_component_utils(slave_seqr)
 
     // Configuration handle for the slave agent
     s_config s_cfg;
@@ -15,7 +15,7 @@ class s_sequencer extends uvm_sequencer #(axi_txn);
     //-------------------------------------------------------------------------
     // CONSTRUCTOR
     //-------------------------------------------------------------------------
-    function new(string name = "s_sequencer", uvm_component parent);
+    function new(string name = "slave_seqr", uvm_component parent);
         super.new(name, parent);
     endfunction
 

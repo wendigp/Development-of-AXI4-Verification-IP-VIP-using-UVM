@@ -5,9 +5,9 @@
 //   - Facilitates communication between Sequences and Master Driver
 //==============================================================================//
 
-class m_sequencer extends uvm_sequencer #(axi_txn);
+class master_seqr extends uvm_sequencer #(axi_txn);
 
-    `uvm_component_utils(m_sequencer)
+    `uvm_component_utils(master_seqr)
 
     // Configuration handle (optional, if sequencer needs access to VIF or settings)
     m_config m_cfg;
@@ -15,7 +15,7 @@ class m_sequencer extends uvm_sequencer #(axi_txn);
     //-------------------------------------------------------------------------
     // CONSTRUCTOR
     //-------------------------------------------------------------------------
-    function new(string name = "m_sequencer", uvm_component parent);
+    function new(string name = "master_seqr", uvm_component parent);
         super.new(name, parent);
     endfunction
 
