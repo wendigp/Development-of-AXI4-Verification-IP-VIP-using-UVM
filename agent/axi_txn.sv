@@ -1,6 +1,5 @@
 //==============================================================================
-// AXI TRANSACTION (FIXED)
-// Uses centralized definitions from axi_defs
+// AXI TRANSACTION
 //==============================================================================
 
 class axi_txn extends uvm_sequence_item;
@@ -8,7 +7,7 @@ class axi_txn extends uvm_sequence_item;
     `uvm_object_utils(axi_txn)
 
     //--------------------------------------------------------------------------
-    // META / ROUTING
+    //ROUTING
     //--------------------------------------------------------------------------
     bit is_write;   // 1 = WRITE transaction, 0 = READ transaction
 
@@ -92,8 +91,6 @@ class axi_txn extends uvm_sequence_item;
         ARADDR % (2**ARSIZE) == 0;
     }
 
-    // REMOVED: constraint c_wdata_size - queues are populated in post_randomize
-
     //--------------------------------------------------------------------------
     // METHODS
     //--------------------------------------------------------------------------
@@ -107,7 +104,7 @@ class axi_txn extends uvm_sequence_item;
         r_addr_calc();
         strb_calc();
         
-        // FIX: Populate WDATA array with random data
+        // Populate WDATA array with random data
         WDATA.delete();
         for (int i = 0; i <= AWLEN; i++) begin
             WDATA.push_back($urandom());
@@ -162,13 +159,13 @@ class axi_txn extends uvm_sequence_item;
                        raddr[i] = raddr[i-1] + num_bytes;
 
             WRAP : begin
-                int unsigned wrap_size = num_bytes * burst_len;
-                int unsigned base = (ARADDR / wrap_size) * wrap_size;
-                for (int i = 1; i < burst_len; i++) begin
-                    raddr[i] = raddr[i-1] + num_bytes;
-                    if (raddr[i] >= base + wrap_size)
-                        raddr[i] = base;
-                end
+                    int unsigned wrap_size = num_bytes * burst_len;
+                    int unsigned base = (ARADDR / wrap_size) * wrap_size;
+                    for (int i = 1; i < burst_len; i++) begin
+                        raddr[i] = raddr[i-1] + num_bytes;
+                        if (raddr[i] >= base + wrap_size)
+                            raddr[i] = base;
+                    end
             end
         endcase
     endfunction

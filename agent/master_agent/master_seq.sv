@@ -1,5 +1,5 @@
 //==============================================================================//
-// AXI MASTER SEQUENCES (FIXED)
+// AXI MASTER SEQUENCES 
 //==============================================================================//
 
 //==============================================================================//
@@ -32,7 +32,7 @@ endclass
 
 
 //==============================================================================//
-// INCR BURST SEQUENCE (FIXED - Write-Then-Read Same Address)
+// INCR BURST SEQUENCE 
 //==============================================================================//
 class incr_burst_seq extends master_base_seq;
     `uvm_object_utils(incr_burst_seq)
@@ -71,7 +71,7 @@ class incr_burst_seq extends master_base_seq;
             
             `uvm_info("INCR_SEQ", $sformatf("Write to addr=0x%0h, len=%0d", shared_addr, shared_len), UVM_MEDIUM)
 
-            // ===== READ TRANSACTION (SAME ADDRESS & LENGTH) =====
+            // ===== READ TRANSACTION =====
             req = axi_txn::type_id::create("req");
             start_item(req);
             req.is_write = 0;

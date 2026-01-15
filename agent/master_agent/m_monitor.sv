@@ -1,10 +1,5 @@
 //==============================================================================
-// AXI MASTER MONITOR - FINAL (QUEUE CORRECT)
-// Fixes:
-// 1. Removed illegal new[] usage on queues
-// 2. Uses delete() + push_back() for burst data
-// 3. Sets is_write for subscriber / scoreboard
-// 4. Reset-safe fork/join_any model preserved
+// AXI MASTER MONITOR
 //==============================================================================
 
 class m_monitor extends uvm_monitor;
@@ -65,11 +60,9 @@ class m_monitor extends uvm_monitor;
                 end
             join_any
 
-            // Kill collection on reset
+            // Kill the collection on reset
             disable monitor_threads;
-            `uvm_info("MASTER_MONITOR",
-                      "Reset detected: Collection threads terminated safely",
-                      UVM_HIGH)
+            `uvm_info("MASTER_MONITOR","Reset detected: Collection threads terminated safely",UVM_HIGH)
         end
     endtask
 

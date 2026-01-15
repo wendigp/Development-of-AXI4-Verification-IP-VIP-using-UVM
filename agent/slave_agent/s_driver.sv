@@ -1,5 +1,5 @@
 //==============================================================================//
-// AXI SLAVE DRIVER (FIXED - RLAST Issue Resolved)
+// AXI SLAVE DRIVER
 //==============================================================================//
 
 import uvm_pkg::*;
@@ -174,7 +174,7 @@ class s_driver extends uvm_driver #(axi_txn);
   endtask
 
   //--------------------------------------------------------------------------
-  // READ DATA PHASE (FIXED RLAST + RVALID ALIGNMENT)
+  // READ DATA PHASE
   //--------------------------------------------------------------------------
   task read_data_phase(axi_txn xtn);
   bit [31:0] addr = xtn.ARADDR;
@@ -183,29 +183,29 @@ class s_driver extends uvm_driver #(axi_txn);
 
   for (int beat = 0; beat <= xtn.ARLEN; beat++) begin
 
-    // 1) Prepare Read Data
+    //  Prepare Read Data
     rdata_temp = '0;
     for (int b = 0; b < 4; b++) begin
       rdata_temp[b*8 +: 8] = slave_mem.exists(addr+b) ? slave_mem[addr+b] : 8'h00;
     end
 
-    // 2) Drive everything together (VALID + DATA + LAST must be stable)
+    // Drive everything together (VALID + DATA + LAST must be stable)
     vif.drv_cb_s.RID    <= xtn.ARID;
     vif.drv_cb_s.RDATA  <= rdata_temp;
     vif.drv_cb_s.RRESP  <= 2'b00;
     vif.drv_cb_s.RLAST  <= (beat == xtn.ARLEN);
     vif.drv_cb_s.RVALID <= 1'b1;
 
-    // 3) Wait until handshake happens (slave must HOLD signals)
+    // Wait until handshake happens (slave must HOLD signals)
     do begin
       @(vif.drv_cb_s);
     end while (!(vif.drv_cb_s.RREADY === 1'b1 && vif.drv_cb_s.RVALID === 1'b1));
 
-    // 4) Drop valid after handshake
+    // Drop valid after handshake
     vif.drv_cb_s.RVALID <= 1'b0;
     vif.drv_cb_s.RLAST  <= 1'b0;
 
-    // 5) Increment addr for INCR burst
+    //Increment addr for INCR burst
     if (xtn.ARBURST == 2'b01)
       addr += beat_bytes;
   end

@@ -1,6 +1,5 @@
 //==============================================================================
-// AXI SLAVE MONITOR - FINAL (QUEUE CORRECT, RESET SAFE)
-// Observes AXI handshakes from the Slave side
+// AXI SLAVE MONITOR 
 //==============================================================================
 
 class s_monitor extends uvm_monitor;
@@ -30,7 +29,7 @@ class s_monitor extends uvm_monitor;
     endfunction
 
     //--------------------------------------------------------------------------
-    // Connect
+    // Connect Phase
     //--------------------------------------------------------------------------
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
@@ -40,7 +39,7 @@ class s_monitor extends uvm_monitor;
     endfunction
 
     //--------------------------------------------------------------------------
-    // Run
+    // Run Phase
     //--------------------------------------------------------------------------
     task run_phase(uvm_phase phase);
         super.run_phase(phase);
@@ -63,9 +62,7 @@ class s_monitor extends uvm_monitor;
 
             // Kill all collection threads on reset
             disable slave_mon_threads;
-            `uvm_info("SLAVE_MONITOR",
-                      "Reset detected: Collection threads terminated safely",
-                      UVM_HIGH)
+            `uvm_info("SLAVE_MONITOR", "Reset detected: Collection threads terminated safely", UVM_HIGH)
         end
     endtask
 

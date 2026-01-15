@@ -1,10 +1,5 @@
 //==============================================================================//
-// RAW MEMORY SCOREBOARD
-// Implementation: Maintains a Golden Memory Model (Associative Array)
-// Logic: 
-//   - On Write: Update the golden_mem model with WDATA based on WSTRB
-//   - On Read: Compare retrieved RDATA against the golden_mem model
-// Features: Supports out-of-order transactions and reset-based memory clearing
+// SCOREBOARD
 //=============================================================================//
 class scoreboard extends uvm_scoreboard;
 
@@ -17,10 +12,9 @@ class scoreboard extends uvm_scoreboard;
     uvm_tlm_analysis_fifo #(axi_txn) m_fifo;
     uvm_tlm_analysis_fifo #(axi_txn) s_fifo;
 
-    // GOLDEN MEMORY MODEL: Sparse associative array (Byte Address -> Byte Data)
+    // GOLDEN MEMORY MODEL (Byte Address -> Byte Data)
     bit [7:0] golden_mem [bit [31:0]];
 
-    // Statistics
     int write_count = 0;
     int read_check_count = 0;
     int error_count = 0;
@@ -55,28 +49,28 @@ task scoreboard::run_phase(uvm_phase phase);
         wait(vif.ARESETn === 1);
 
         fork
-            // Process A: Monitor Master (Writer/Initiator Side)
+            // Process A: Monitor Master
             forever begin
                 axi_txn m_xtn;
                 m_fifo.get(m_xtn);
                 if (m_xtn.WDATA.size() > 0) process_write(m_xtn);
             end
 
-            // Process B: Monitor Slave (Responder Side)
+            // Process B: Monitor Slave
             forever begin
                 axi_txn s_xtn;
                 s_fifo.get(s_xtn);
                 if (s_xtn.RDATA.size() > 0) process_read(s_xtn);
             end
 
-            // Process C: Reset Monitor (Synchronous structured exit)
+            // Process C: Reset Monitor
             begin
                 wait(vif.ARESETn === 0);
                 `uvm_info("SCOREBOARD", "RESET DETECTED: Clearing Golden Memory", UVM_LOW)
             end
         join_any
         
-        // ISSUE 1 FIX: Clean termination of all processes on reset
+        // Clean termination of all processes on reset
         disable fork;
         golden_mem.delete();
         m_fifo.flush();
@@ -98,7 +92,7 @@ function void scoreboard::process_write(axi_txn xtn);
                 golden_mem[addr + j] = xtn.WDATA[i][(j*8) +: 8];
             end
         end
-        // ISSUE 4 FIX: Dynamic address calculation based on burst type
+        // Dynamic address calculation based on burst type
         addr = get_next_addr(addr, xtn.AWBURST, xtn.AWLEN);
     end
     write_count++;
@@ -130,7 +124,7 @@ function void scoreboard::process_read(axi_txn xtn);
                 `uvm_warning("SCB_UNINIT_READ", $sformatf("Read from uninitialized Addr %h", addr + j))
             end
         end
-        // ISSUE 4 FIX: Dynamic address calculation for read burst
+        //Dynamic address calculation for read burst
         addr = get_next_addr(addr, xtn.ARBURST, xtn.ARLEN);
     end
 
@@ -138,18 +132,18 @@ function void scoreboard::process_read(axi_txn xtn);
     else           error_count++;
 endfunction
 
-// Helper to calculate address based on AXI Burst Types (FIXES ISSUE 4)
+// Calculate address based on AXI Burst Types 
 function bit [31:0] scoreboard::get_next_addr(bit [31:0] cur_addr, bit [1:0] b_type, int len);
     case(b_type)
         2'b00: return cur_addr; // FIXED burst
         2'b01: return cur_addr + 4; // INCR burst
-        2'b10: begin // WRAP burst (Simplified logic for 4-byte aligned)
-            bit [31:0] wrap_size = (len + 1) * 4;
-            bit [31:0] base_addr = (cur_addr / wrap_size) * wrap_size;
-            bit [31:0] next_addr = cur_addr + 4;
-            if (next_addr >= base_addr + wrap_size) return base_addr;
-            else return next_addr;
-        end
+        2'b10: begin // WRAP burst 
+                bit [31:0] wrap_size = (len + 1) * 4;
+                bit [31:0] base_addr = (cur_addr / wrap_size) * wrap_size;
+                bit [31:0] next_addr = cur_addr + 4;
+                if (next_addr >= base_addr + wrap_size) return base_addr;
+                else return next_addr;
+                end
         default: return cur_addr + 4;
     endcase
 endfunction

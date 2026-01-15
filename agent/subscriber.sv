@@ -1,5 +1,5 @@
 //==============================================================================//
-// AXI FUNCTIONAL COVERAGE SUBSCRIBER (FIXED)
+// AXI FUNCTIONAL COVERAGE SUBSCRIBER
 //==============================================================================//
 class axi_subscriber extends uvm_subscriber #(axi_txn);
 
@@ -7,7 +7,6 @@ class axi_subscriber extends uvm_subscriber #(axi_txn);
 
   axi_txn xtn;
 
-  // RAW tracking
   bit [31:0] last_write_start_addr;
   bit [31:0] last_write_end_addr;
   bit [1:0]  last_write_burst;
@@ -163,7 +162,7 @@ class axi_subscriber extends uvm_subscriber #(axi_txn);
       last_write_burst = xtn.AWBURST;
       write_seen = 1;
 
-      // FIX: Sample only first beat's WSTRB
+      // Sample only first beat's WSTRB
       if (xtn.WSTRB.size() > 0) begin
         current_wstrb = xtn.WSTRB[0];
         wstrb_cg.sample();

@@ -1,7 +1,5 @@
 //=============================================================================//
 // ENVIRONMENT
-// Implementation: Instantiates UVCs, Scoreboard, and Functional Coverage
-// Updated: Correctly routes specific VIFs to individual subscribers
 //============================================================================//
 
 class env extends uvm_env;
@@ -35,7 +33,6 @@ function void env::build_phase(uvm_phase phase);
 
     `uvm_info("ENV", $sformatf("ENV built with %0d masters and %0d slaves",env_cfg.no_of_masters, env_cfg.no_of_slaves),UVM_LOW)
 
-    // DEFENSIVE CHECKS: Verify configuration array sizes match expected counts
     if (env_cfg.m_cfg.size() != env_cfg.no_of_masters)
         `uvm_fatal("ENV", $sformatf("Master cfg size mismatch: Expected %0d, Got %0d", env_cfg.no_of_masters, env_cfg.m_cfg.size()))
     
@@ -58,7 +55,7 @@ function void env::build_phase(uvm_phase phase);
     for(int i = 0; i < env_cfg.no_of_masters; i++) begin
         m_subscriber[i] = axi_subscriber::type_id::create($sformatf("m_subscriber_%0d", i), this);
         
-        // FIX: Pass the VIF specific to this master agent from the master configuration
+        // Pass the VIF specific to this master agent from the master configuration
         uvm_config_db #(virtual axi_if)::set(this, $sformatf("m_subscriber_%0d", i), "vif", env_cfg.m_cfg[i].vif);
     end
 
@@ -67,7 +64,7 @@ function void env::build_phase(uvm_phase phase);
     for(int i = 0; i < env_cfg.no_of_slaves; i++) begin
         s_subscriber[i] = axi_subscriber::type_id::create($sformatf("s_subscriber_%0d", i), this);
         
-        // FIX: Pass the VIF specific to this slave agent from the slave configuration
+        //Pass the VIF specific to this slave agent from the slave configuration
         uvm_config_db #(virtual axi_if)::set(this, $sformatf("s_subscriber_%0d", i), "vif", env_cfg.s_cfg[i].vif);
     end
 endfunction

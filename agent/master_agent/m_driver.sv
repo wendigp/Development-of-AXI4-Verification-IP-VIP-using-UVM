@@ -1,6 +1,5 @@
 //===============================================================//
-// MASTER DRIVER (FIXED)
-// Implementation of AXI4 Master Protocol with Master Delays
+// MASTER DRIVER 
 //==============================================================//
 
 import uvm_pkg::*;
@@ -14,7 +13,6 @@ class m_driver extends uvm_driver #(axi_txn);
     m_config            m_cfg;
     virtual axi_if      vif;
 
-    // Extern declarations for clean class structure
     extern function new(string name = "m_driver", uvm_component parent);
     extern function void build_phase(uvm_phase phase);
     extern function void connect_phase(uvm_phase phase);
@@ -43,7 +41,7 @@ function void m_driver::build_phase(uvm_phase phase);
         `uvm_fatal("MASTER DRIVER", "CANNOT GET DATA FROM M_CFG. HAVE YOU SET IT?")
 endfunction
 
-// CONNECT PHASE - Mapping virtual interface
+// CONNECT PHASE
 function void m_driver::connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     vif = m_cfg.vif;
@@ -51,7 +49,7 @@ function void m_driver::connect_phase(uvm_phase phase);
         `uvm_fatal("MASTER DRIVER", "VIF IS NULL")
 endfunction
 
-// RUN PHASE - Driving main loop
+// RUN PHASE - Driving 
 task m_driver::run_phase(uvm_phase phase);
     // Wait for reset
     wait(vif.ARESETn === 1);
@@ -69,10 +67,10 @@ task m_driver::run_phase(uvm_phase phase);
 endtask
 
 //================================================================//
-// SEND TO DUT - Channel Arbitration
+// SEND TO DUT
 //===============================================================//
 task m_driver::send_to_dut(axi_txn xtn);
-    // FIX: Use is_write flag instead of WDATA.size()
+   
     if(xtn.is_write == 1) begin
         `uvm_info(get_type_name(), "WRITE TRANSACTION STARTS", UVM_MEDIUM)
         `uvm_info(get_type_name(), $sformatf("WDATA.size=%0d, AWLEN=%0d", xtn.WDATA.size(), xtn.AWLEN), UVM_HIGH)
@@ -106,7 +104,7 @@ task m_driver::write_addr(axi_txn xtn);
     vif.drv_cb_m.AWLEN   <= xtn.AWLEN;
     vif.drv_cb_m.AWVALID <= 1'b1;
 
-    // Handshake: Wait for READY
+    // Wait for READY
     do begin
         @(vif.drv_cb_m);
     end while(vif.drv_cb_m.AWREADY !== 1'b1);
@@ -134,7 +132,7 @@ task m_driver::write_data(axi_txn xtn);
 
         `uvm_info(get_type_name(), $sformatf("Beat %0d: WDATA=0x%0h, WSTRB=0x%0h", i, xtn.WDATA[i], xtn.WSTRB[i]), UVM_HIGH)
 
-        // Handshake: Wait for Slave READY
+        //Wait for Slave READY
         do begin
             @(vif.drv_cb_m);
         end while(vif.drv_cb_m.WREADY !== 1'b1);
@@ -200,13 +198,13 @@ task m_driver::read_data(axi_txn xtn);
   `uvm_info(get_type_name(), "START OF READ DATA", UVM_HIGH)
 
   while (i <= xtn.ARLEN) begin
-    // 1. Master decides when to be ready (can include random delay here)
+    // Master decides when to be ready 
     vif.drv_cb_m.RREADY <= 1'b1;
 
-    // 2. Sample at every clock edge
+    // Sample at every clock edge
     @(vif.drv_cb_m);
 
-    // 3. THE HANDSHAKE CHECK: Only increment if both are '1'
+    // THE HANDSHAKE CHECK
     if (vif.drv_cb_m.RVALID === 1'b1 && vif.drv_cb_m.RREADY === 1'b1) begin
       
       // Perform Protocol Checks on the sampled handshake
@@ -221,12 +219,12 @@ task m_driver::read_data(axi_txn xtn);
       // Increment beat counter only on successful handshake
       i++;
 
-      // 4. Optional: Master can pull down RREADY to create backpressure
+      //  Master can pull down RREADY to create backpressure
       vif.drv_cb_m.RREADY <= 1'b0;
       repeat($urandom_range(0,2)) @(vif.drv_cb_m);
     end
     else begin
-      // If no handshake, we just loop back and keep RREADY high (or toggle it)
+      // If no handshake, we just loop back and keep RREADY high 
       // until the Slave provides RVALID
     end
   end

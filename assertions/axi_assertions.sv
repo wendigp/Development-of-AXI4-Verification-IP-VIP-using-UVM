@@ -1,10 +1,5 @@
 //==============================================================================//
-// AXI4 PROTOCOL CHECKERS (SVA)
-// Scope:
-//   - Handshake integrity
-//   - Control & response stability
-//   - Reset compliance
-//   - Runtime enable via +ASSERT_ON
+// AXI4 PROTOCOL CHECKERS 
 //==============================================================================//
 
 interface axi_assertions #(
@@ -59,7 +54,7 @@ interface axi_assertions #(
     import uvm_pkg::*;
 
     //--------------------------------------------------------------------------
-    // ASSERTION ENABLE CONTROL (Runtime)
+    // ASSERTION ENABLE CONTROL 
     //--------------------------------------------------------------------------
     bit assert_en;
 
@@ -80,6 +75,7 @@ interface axi_assertions #(
         disable iff (!aresetn || !assert_en)
         (AWVALID && !AWREADY) |=> AWVALID;
     endproperty
+
     assert_awvalid_held:
         assert property (p_awvalid_held)
         else `uvm_error("AXI_ERR_VALID", "AWVALID dropped before AWREADY");
@@ -89,6 +85,7 @@ interface axi_assertions #(
         disable iff (!aresetn || !assert_en)
         (WVALID && !WREADY) |=> WVALID;
     endproperty
+
     assert_wvalid_held:
         assert property (p_wvalid_held)
         else `uvm_error("AXI_ERR_VALID", "WVALID dropped before WREADY");
@@ -98,6 +95,7 @@ interface axi_assertions #(
         disable iff (!aresetn || !assert_en)
         (ARVALID && !ARREADY) |=> ARVALID;
     endproperty
+
     assert_arvalid_held:
         assert property (p_arvalid_held)
         else `uvm_error("AXI_ERR_VALID", "ARVALID dropped before ARREADY");
@@ -107,12 +105,13 @@ interface axi_assertions #(
         disable iff (!aresetn || !assert_en)
         (RVALID && !RREADY) |=> RVALID;
     endproperty
+
     assert_rvalid_held:
         assert property (p_rvalid_held)
         else `uvm_error("AXI_ERR_VALID", "RVALID dropped before RREADY");
 
     //--------------------------------------------------------------------------
-    // 2. CONTROL & ADDRESS STABILITY
+    // 2. CONTROL & ADDRESS
     //--------------------------------------------------------------------------
 
     property p_aw_stable;
@@ -143,7 +142,7 @@ interface axi_assertions #(
         else `uvm_error("AXI_ERR_STABLE", "WDATA/WSTRB/WLAST changed");
 
     //--------------------------------------------------------------------------
-    // 3. RESPONSE STABILITY
+    // 3. RESPONSE
     //--------------------------------------------------------------------------
 
     property p_bresp_stable;
@@ -165,7 +164,7 @@ interface axi_assertions #(
         else `uvm_error("AXI_ERR_STABLE", "RRESP changed during handshake");
 
     //--------------------------------------------------------------------------
-    // 4. RESET COMPLIANCE
+    // 4. RESET
     //--------------------------------------------------------------------------
 
     property p_reset_valid_low;

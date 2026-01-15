@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 //==============================================================================//
-// TOP LEVEL TESTBENCH - VIP DEVELOPMENT MODE
+// TOP LEVEL TESTBENCH - VIP DEVELOPMENT
 //==============================================================================//
 
 `include "uvm_macros.svh"
@@ -24,7 +24,7 @@ module top;
  
 
     //-------------------------------------------------------------------------
-    // 2. AXI Interface
+    // 2. AXI Interface and Reset
     //-------------------------------------------------------------------------
     axi_if pif (clock);
 
@@ -39,11 +39,11 @@ module top;
     //-------------------------------------------------------------------------
     initial begin
         uvm_config_db #(virtual axi_if)::set(null, "*", "vif", pif);
-        run_test();   // or run_test("base_test");
+        run_test();   
     end
 
     //-------------------------------------------------------------------------
-    // 4. Waveform Dump (Questa-friendly)
+    // 4. Waveform Dump
     //-------------------------------------------------------------------------
     initial begin
         $wlfdumpvars(0, top);
