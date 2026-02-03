@@ -95,3 +95,13 @@ Development-of-AXI4-Verification-IP-VIP-using-UVM/
 │   └── regression.py
 ├── Makefile
 └── README.md
+
+## License
+
+This project is licensed under the **Apache License, Version 2.0**.
+
+You may obtain a copy of the License at:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+See the `LICENSE` file in this repository for full license text.
