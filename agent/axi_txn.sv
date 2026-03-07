@@ -175,22 +175,38 @@ class axi_txn extends uvm_sequence_item;
     //--------------------------------------------------------------------------
 
     function void strb_calc();
-        int unsigned bus_bytes = DATA_WIDTH / 8;
-        int unsigned num_bytes = 2**AWSIZE;
 
-        WSTRB.delete();
+    // Number of byte lanes on the data bus
+    int unsigned bus_bytes = DATA_WIDTH / 8;
+
+    // Number of bytes per transfer
+    int unsigned num_bytes = 1 << AWSIZE;
+
+    // Clear previous WSTRB values
+    WSTRB.delete();
+
+    // AXI burst has AWLEN + 1 beats
+    for (int i = 0; i <= AWLEN; i++) begin
+
+        // Byte offset inside the data bus
+        int unsigned offset = waddr[i] % bus_bytes;
+
+        // WSTRB vector
+        bit [(DATA_WIDTH/8)-1:0] mask;
+        bit [(DATA_WIDTH/8)-1:0] strb;
         
-        for (int i = 0; i <= AWLEN; i++) begin
-            bit [(DATA_WIDTH/8)-1:0] strb = '0;
-            
-            for (int lane = 0; lane < bus_bytes; lane++) begin
-                if (lane >= (waddr[i] % bus_bytes) &&
-                    lane <  (waddr[i] % bus_bytes) + num_bytes)
-                    strb[lane] = 1'b1;
-            end
-            
-            WSTRB.push_back(strb);
-        end
-    endfunction
+        // Create mask with 'num_bytes' number of 1s
+        mask = (1 << num_bytes) - 1;
+
+        // Shift mask according to byte offset
+        strb = mask << offset;
+
+        // Store the generated WSTRB
+        WSTRB.push_back(strb);
+
+    end
+
+endfunction
+
 
 endclass
