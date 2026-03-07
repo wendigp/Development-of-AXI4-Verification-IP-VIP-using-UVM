@@ -119,56 +119,74 @@ class axi_txn extends uvm_sequence_item;
     //--------------------------------------------------------------------------
 
     function void w_addr_calc();
-        int unsigned num_bytes = 2**AWSIZE;
-        int unsigned burst_len = AWLEN + 1;
 
-        waddr = new[burst_len];
-        waddr[0] = AWADDR;
+    int unsigned num_bytes = 1 << AWSIZE;
+    int unsigned burst_len = AWLEN + 1;
 
-        case (AWBURST)
-            FIXED: for (int i = 1; i < burst_len; i++)
-                       waddr[i] = waddr[0];
+    waddr = new[burst_len];
+    waddr[0] = AWADDR;
 
-            INCR : for (int i = 1; i < burst_len; i++)
-                       waddr[i] = waddr[i-1] + num_bytes;
+    case (AWBURST)
 
-            WRAP : begin
-                int unsigned wrap_size = num_bytes * burst_len;
-                int unsigned base = (AWADDR / wrap_size) * wrap_size;
-                for (int i = 1; i < burst_len; i++) begin
-                    waddr[i] = waddr[i-1] + num_bytes;
-                    if (waddr[i] >= base + wrap_size)
-                        waddr[i] = base;
-                end
+        FIXED:
+            for (int i = 1; i < burst_len; i++)
+                waddr[i] = waddr[0];
+
+        INCR:
+            for (int i = 1; i < burst_len; i++)
+                waddr[i] = waddr[i-1] + num_bytes;
+
+        WRAP: begin
+            int unsigned wrap_size = num_bytes * burst_len;
+            int unsigned base = (AWADDR / wrap_size) * wrap_size;
+
+            for (int i = 1; i < burst_len; i++) begin
+                waddr[i] = waddr[i-1] + num_bytes;
+
+                if (waddr[i] >= base + wrap_size)
+                    waddr[i] = base;
             end
-        endcase
+        end
+
+        default:
+            $error("Invalid burst type");
+    endcase
     endfunction
 
-    function void r_addr_calc();
-        int unsigned num_bytes = 2**ARSIZE;
-        int unsigned burst_len = ARLEN + 1;
+   function void r_addr_calc();
 
-        raddr = new[burst_len];
-        raddr[0] = ARADDR;
+    int unsigned num_bytes = 1 << ARSIZE;
+    int unsigned burst_len = ARLEN + 1;
 
-        case (ARBURST)
-            FIXED: for (int i = 1; i < burst_len; i++)
-                       raddr[i] = raddr[0];
+    raddr = new[burst_len];
+    raddr[0] = ARADDR;
 
-            INCR : for (int i = 1; i < burst_len; i++)
-                       raddr[i] = raddr[i-1] + num_bytes;
+    case (ARBURST)
 
-            WRAP : begin
-                    int unsigned wrap_size = num_bytes * burst_len;
-                    int unsigned base = (ARADDR / wrap_size) * wrap_size;
-                    for (int i = 1; i < burst_len; i++) begin
-                        raddr[i] = raddr[i-1] + num_bytes;
-                        if (raddr[i] >= base + wrap_size)
-                            raddr[i] = base;
-                    end
+        FIXED:
+            for (int i = 1; i < burst_len; i++)
+                raddr[i] = raddr[0];
+
+        INCR:
+            for (int i = 1; i < burst_len; i++)
+                raddr[i] = raddr[i-1] + num_bytes;
+
+        WRAP: begin
+            int unsigned wrap_size = num_bytes * burst_len;
+            int unsigned base = (ARADDR / wrap_size) * wrap_size;
+
+            for (int i = 1; i < burst_len; i++) begin
+                raddr[i] = raddr[i-1] + num_bytes;
+
+                if (raddr[i] >= base + wrap_size)
+                    raddr[i] = base;
             end
-        endcase
-    endfunction
+        end
+
+        default:
+            $error("Unsupported burst type");
+    endcase
+endfunction
 
     //--------------------------------------------------------------------------
     // STROBE CALCULATION
@@ -210,3 +228,4 @@ endfunction
 
 
 endclass
+
